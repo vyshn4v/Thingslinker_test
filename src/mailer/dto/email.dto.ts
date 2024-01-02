@@ -5,5 +5,4 @@ export interface sendEmailDto{
     recipients: string[],
     subject:string
     text:string
-    html:string
 }

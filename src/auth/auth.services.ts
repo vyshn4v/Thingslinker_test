@@ -1,6 +1,11 @@
-import { ForbiddenException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AuthDto } from './dto';
+import { AuthDto, EmailAuthDto } from './dto';
 import * as argon from 'argon2';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { MailerService } from 'src/mailer/mailer.service';
@@ -11,25 +16,44 @@ export class AuthService {
     private prisma: PrismaService,
     private mailer: MailerService,
   ) {}
-  async login(user: AuthDto) {
+
+  private async verifyPassword(hashedPassword: string, password: string) {
+    return await argon.verify(hashedPassword, password);
+  }
+
+  async signin(creadentials: AuthDto) {
     try {
       const User = await this.prisma.user.findUnique({
         where: {
-          email: user.email,
+          email: creadentials.email,
         },
       });
       if (!User.status) {
-        throw new HttpException('User not verified please verify mail', HttpStatus.FORBIDDEN);
+        throw new HttpException(
+          'User not verified please verify mail',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+      const passwordStatus = await this.verifyPassword(
+        User.password,
+        creadentials.password,
+      );
+      if(!passwordStatus){
+        throw new HttpException(
+          'Entered password is not correct',
+          HttpStatus.FORBIDDEN,
+        );
       }
       
-      return User;
+      return passwordStatus;
     } catch (error) {
-      return error
+      return error;
     }
   }
+
   async signup(user: AuthDto) {
     try {
-      const password = await argon.hash(user.password);
+      const password: string = await argon.hash(user.password);
       const Otp: string = await otpGenrator.generate(6, {
         upperCaseAlphabets: false,
         specialChars: false,
@@ -42,13 +66,13 @@ export class AuthService {
         recipients: [user.email],
         subject: 'Verification Mail',
         text: text,
-        html: '',
       });
+      const hashedOtp: string = await argon.hash(Otp);
       await this.prisma.user.create({
         data: {
           email: user.email,
           password,
-          otp: Otp,
+          otp: hashedOtp,
           otpExpired: otpExpiredDate,
         },
       });
@@ -60,6 +84,45 @@ export class AuthService {
         }
       }
       throw error;
+    }
+  }
+
+  async verifyEmail(creadentials: EmailAuthDto) {
+    try {
+      const User = await this.prisma.user.findUnique({
+        where: {
+          email: creadentials.email,
+        },
+      });
+      let currentDate: Date = new Date();
+      let expiryDate: Date = new Date(User.otpExpired);
+      if (currentDate > expiryDate) {
+        return 'Otp expired';
+      }
+      if (User.status) {
+        return 'User already verified';
+      }
+      const otpStatus: boolean = await this.verifyPassword(
+        User.otp,
+        creadentials.otp,
+      );
+      console.log(otpStatus);
+
+      if (!otpStatus) {
+        throw new Error('failed');
+      }
+      await this.prisma.user.update({
+        where: {
+          email: User.email,
+        },
+        data: {
+          status: true,
+          otp: '',
+        },
+      });
+      return 'Otp verified succesfully';
+    } catch (error) {
+      return error;
     }
   }
 }

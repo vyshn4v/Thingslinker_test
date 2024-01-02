@@ -21,14 +21,13 @@ export class MailerService {
   }
 
   async sendEmail(emailDto: sendEmailDto) {
-    const {from,recipients,subject,text,html}=emailDto
+    const {from,recipients,subject,text}=emailDto
     const transport = this.mailTransport();
     const options :Mail.Options={
         from:from ?? this.configService.get('MAIL_USER'),
         to:recipients,
         subject,
         text,
-        html
     }
 
     try{

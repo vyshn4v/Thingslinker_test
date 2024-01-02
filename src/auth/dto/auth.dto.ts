@@ -1,6 +1,7 @@
 import {
   IsEmail,
   IsNotEmpty,
+  IsNumber,
   IsString,
   Matches,
   MaxLength,
@@ -23,7 +24,16 @@ export class AuthDto {
   })
   password: string;
 }
-
+export class EmailAuthDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  @MaxLength(6)
+  otp: string;
+}
 // export interface user {
 //   id: string;
 //   email: String;
