@@ -1,18 +1,18 @@
-import { IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsEmpty, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
 
 export interface UserDto{
-        email: string;
+        id: string;
         iat: number;
         exp: number;
 }
 
 export class UpdateUserDto{
         @IsEmail()
-        @IsNotEmpty()
+        @IsOptional()
         email?: string;
       
         @IsString()
-        @IsNotEmpty()
+        @IsOptional()
         @MinLength(4)
         @MaxLength(20)
         @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {

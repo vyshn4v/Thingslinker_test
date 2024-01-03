@@ -21,9 +21,9 @@ export class TokenService {
       expiresIn: this.configService.get('JWT_EXPIRESIN'),
       secret: this.configService.get('JWT_SECRET'),
     });
-    const refreshToken: string = await this.jwtService.sign(data, {
+    const refreshToken: string = await this.jwtService.sign({data}, {
       expiresIn: this.configService.get('JWT_REFRESH_TOKEN_EXPIRESIN'),
-      secret: this.configService.get('JWT_SECRET'),
+      secret: this.configService.get('JWT_REFRESHTOKEN_SECRET'),
     });
     return { token, refreshToken };
   }
@@ -31,6 +31,13 @@ export class TokenService {
   async verifyToken(token: string) {
     const status = await this.jwtService.verify(token, {
       secret: this.configService.get('JWT_SECRET'),
+    });
+    return status;
+  }
+
+  async verifyRefreshToken(token: string) {
+    const status = await this.jwtService.verify(token, {
+      secret: this.configService.get('JWT_REFRESHTOKEN_SECRET'),
     });
     return status;
   }

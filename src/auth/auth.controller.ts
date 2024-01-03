@@ -1,7 +1,17 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.services';
 import { AuthDto, EmailAuthDto, RefreshTokenDto } from './dto';
 import { AuthorizationMiddleware } from 'src/common/middlewares/authorization.middleware';
+import { User } from 'src/decorator/user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -19,8 +29,7 @@ export class AuthController {
     return this.authService.verifyEmail(creadentials);
   }
   @Post('refresh-token')
-  @UseGuards(AuthorizationMiddleware)
-  refreshToken(@Body() creadentials: RefreshTokenDto) {
-    return this.authService.refreshToken(creadentials);
+  refreshToken(@Headers('authorization') creadentials: string) {
+    return this.authService.refreshToken({ refreshToken: creadentials });
   }
 }

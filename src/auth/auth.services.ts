@@ -32,11 +32,8 @@ export class AuthService {
           email: creadentials.email,
         },
       });
-      if(!User){
-        throw new HttpException(
-          'User not found',
-          HttpStatus.NOT_FOUND
-        )
+      if (!User) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
       if (!User.status) {
         throw new HttpException(
@@ -54,7 +51,9 @@ export class AuthService {
           HttpStatus.FORBIDDEN,
         );
       }
-      const token: TokensDto = await this.jwt.createTokens({ email: User.email });
+      const token: TokensDto = await this.jwt.createTokens({
+        id: User.id,
+      });
       return token;
     } catch (error) {
       return error;
@@ -135,13 +134,16 @@ export class AuthService {
       return error;
     }
   }
-  async refreshToken(creadentials:RefreshTokenDto){
-    try{
-      const decodedToken=await this.jwt.verifyToken(creadentials.refreshToken)
-      const Token:string=await this.jwt.createToken(decodedToken.email)
-      return {"token":Token}
-    }catch(error){
-      return error
+  async refreshToken(creadentials: RefreshTokenDto) {
+    try {
+      const refreshToken: string = creadentials.refreshToken.split(' ')[1];
+      console.log(creadentials);
+
+      const decodedToken = await this.jwt.verifyRefreshToken(refreshToken);
+      const Token: string = await this.jwt.createToken(decodedToken.email);
+      return { token: Token };
+    } catch (error) {
+      return error;
     }
   }
 }

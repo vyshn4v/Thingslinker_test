@@ -1,5 +1,5 @@
 export interface TokenDataDto{
-    email:string
+    id:string
 }
 export interface TokensDto{
     token:string,

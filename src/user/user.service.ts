@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -14,7 +15,7 @@ export class UserService {
     try {
       const UserDetails = await this.prisma.user.findUnique({
         where: {
-          email: user.email,
+          id: user.id,
         },
       });
       if (!UserDetails) {
@@ -29,6 +30,9 @@ export class UserService {
 
   async updateUserDetails(creadentials: UserDto, userDetails: UpdateUserDto) {
     try {
+      if (!userDetails.email && !userDetails.password) {
+        throw new BadRequestException('email or password must be required');
+      }
       const hashedPassword = await argon.hash(userDetails.password);
       let data: UpdateUserDto = {};
       if (userDetails.email) {
@@ -37,14 +41,15 @@ export class UserService {
       if (userDetails.password) {
         data.password = hashedPassword;
       }
-      const updatedUser = this.prisma.user.update({
+      await this.prisma.user.update({
         where: {
-          email: creadentials.email,
+          id: creadentials.id,
         },
         data: data,
       });
+      return 'User update successfully';
     } catch (error) {
-        
+      return error;
     }
   }
 }
