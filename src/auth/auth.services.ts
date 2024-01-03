@@ -115,8 +115,6 @@ export class AuthService {
         User.otp,
         creadentials.otp,
       );
-      console.log(otpStatus);
-
       if (!otpStatus) {
         throw new Error('failed');
       }

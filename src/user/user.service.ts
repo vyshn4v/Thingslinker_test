@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -8,6 +9,7 @@ import {
 import { UpdateUserDto, UserDto } from './dto/';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon from 'argon2';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
@@ -33,7 +35,10 @@ export class UserService {
       if (!userDetails.email && !userDetails.password) {
         throw new BadRequestException('email or password must be required');
       }
-      const hashedPassword = await argon.hash(userDetails.password);
+      let hashedPassword = null;
+      if (userDetails.password) {
+        hashedPassword = await argon.hash(userDetails.password);
+      }
       let data: UpdateUserDto = {};
       if (userDetails.email) {
         data.email = userDetails.email;
@@ -49,6 +54,11 @@ export class UserService {
       });
       return 'User update successfully';
     } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ForbiddenException('Email already taken');
+        }
+      }
       return error;
     }
   }

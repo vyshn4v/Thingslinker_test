@@ -28,7 +28,7 @@ export class AuthController {
   verifyEmail(@Body() creadentials: EmailAuthDto) {
     return this.authService.verifyEmail(creadentials);
   }
-  @Post('refresh-token')
+  @Get('refresh-token')
   refreshToken(@Headers('authorization') creadentials: string) {
     return this.authService.refreshToken({ refreshToken: creadentials });
   }
