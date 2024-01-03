@@ -1,15 +1,13 @@
-import { Module } from "@nestjs/common";
-import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.services";
-import { PrismaModule } from "src/prisma/prisma.module";
-import { MailerService } from "src/mailer/mailer.service";
-import { MailerModule } from "src/mailer/mailer.module";
+import { Module } from '@nestjs/common';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.services';
+import { MailerModule } from 'src/mailer/mailer.module';
+import { TokenModule } from 'src/token/token.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-    imports:[MailerModule],
-    controllers:[AuthController],
-    providers:[AuthService]
+  imports: [MailerModule,JwtModule],
+  controllers: [AuthController],
+  providers: [AuthService],
 })
-export class AuthModule{
-    
-}
+export class AuthModule {}

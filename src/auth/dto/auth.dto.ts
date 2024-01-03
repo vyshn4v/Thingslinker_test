@@ -34,14 +34,8 @@ export class EmailAuthDto {
   @MaxLength(6)
   otp: string;
 }
-// export interface user {
-//   id: string;
-//   email: String;
-//   password: String;
-//   status: Boolean;
-//   otp: String;
-//   @I
-//   otpExpired: DateTime;
-//   createdAt: DateTime;
-//   updatedAt: DateTime;
-// }
+
+export class RefreshTokenDto{
+  @IsNotEmpty()
+  refreshToken:string
+}

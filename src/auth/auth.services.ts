@@ -5,22 +5,26 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AuthDto, EmailAuthDto } from './dto';
+import { AuthDto, EmailAuthDto, RefreshTokenDto } from './dto';
 import * as argon from 'argon2';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { MailerService } from 'src/mailer/mailer.service';
 import * as otpGenrator from 'otp-generator';
+import { TokenService } from 'src/token/token.service';
+import { TokensDto } from 'src/token/dto';
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private mailer: MailerService,
+    private jwt: TokenService,
   ) {}
 
   private async verifyPassword(hashedPassword: string, password: string) {
     return await argon.verify(hashedPassword, password);
   }
 
+  verifyToken() {}
   async signin(creadentials: AuthDto) {
     try {
       const User = await this.prisma.user.findUnique({
@@ -28,6 +32,12 @@ export class AuthService {
           email: creadentials.email,
         },
       });
+      if(!User){
+        throw new HttpException(
+          'User not found',
+          HttpStatus.NOT_FOUND
+        )
+      }
       if (!User.status) {
         throw new HttpException(
           'User not verified please verify mail',
@@ -38,14 +48,14 @@ export class AuthService {
         User.password,
         creadentials.password,
       );
-      if(!passwordStatus){
+      if (!passwordStatus) {
         throw new HttpException(
           'Entered password is not correct',
           HttpStatus.FORBIDDEN,
         );
       }
-      
-      return passwordStatus;
+      const token: TokensDto = await this.jwt.createTokens({ email: User.email });
+      return token;
     } catch (error) {
       return error;
     }
@@ -123,6 +133,15 @@ export class AuthService {
       return 'Otp verified succesfully';
     } catch (error) {
       return error;
+    }
+  }
+  async refreshToken(creadentials:RefreshTokenDto){
+    try{
+      const decodedToken=await this.jwt.verifyToken(creadentials.refreshToken)
+      const Token:string=await this.jwt.createToken(decodedToken.email)
+      return {"token":Token}
+    }catch(error){
+      return error
     }
   }
 }
