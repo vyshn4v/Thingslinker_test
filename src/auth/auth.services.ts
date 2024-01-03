@@ -109,14 +109,14 @@ export class AuthService {
         return 'Otp expired';
       }
       if (User.status) {
-        return 'User already verified';
+        throw new HttpException('User already verified', HttpStatus.FORBIDDEN);
       }
       const otpStatus: boolean = await this.verifyPassword(
         User.otp,
         creadentials.otp,
       );
       if (!otpStatus) {
-        throw new Error('failed');
+        throw new HttpException('Enter the corret otp', HttpStatus.FORBIDDEN);
       }
       await this.prisma.user.update({
         where: {
